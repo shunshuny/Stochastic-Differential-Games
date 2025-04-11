@@ -16,10 +16,10 @@ def solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100):
 
     for i in range(max_iter):
         # 関数 F(X) の定義
-        F = A.T @ X + X @ A - X @ B @ R_inv @ B.T @ X + Q
+        F = A.T @ X + X @ A - X @ B @ R_inv @ B.T @ X + Q  # リカッチ代数方程式の残差
 
         # 収束判定
-        err = norm(F, ord='fro')
+        err = norm(F, ord='fro')  # フロベニウスノルムを計算
         print(f"Iteration {i}, Residual norm: {err:.2e}")
         if err < tol:
             break
@@ -38,11 +38,11 @@ def solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100):
     return X
 
 # システム行列の例
-A = np.array([[0., 1.], [-2., -3.]])
+A = np.array([[0., 1.], [-1., -2.]])
 B = np.array([[0.], [1.]])
-Q = np.eye(2)
+Q = np.array([[10., 0.], [0., 1.]])
 R = np.array([[1.]])
 
-X = solve_riccati_newton(A, B, Q, R)
+P = solve_riccati_newton(A, B, Q, R)
 print("解 X:")
-print(X)
+print(P)
