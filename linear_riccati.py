@@ -1,6 +1,8 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.linalg import solve_continuous_lyapunov as solve_lyapunov
 from numpy.linalg import norm, inv
+from scipy.integrate import solve_ivp
 
 def solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100):
     """
@@ -46,3 +48,32 @@ R = np.array([[1.]])
 P = solve_riccati_newton(A, B, Q, R)
 print("解 X:")
 print(P)
+
+# 3. フィードバックゲイン計算
+K = inv(R) @ B.T @ P
+A_cl = A - B @ K  # 閉ループ系
+
+# 4. シミュレーション
+def dynamics(t, x):
+    return A_cl @ x
+
+x0 = np.array([1.0, 0.0])  # 初期状態
+t_span = (0, 10)
+t_eval = np.linspace(*t_span, 300)
+
+sol = solve_ivp(dynamics, t_span, x0, t_eval=t_eval)
+
+# 5. ノルムの時間変化を計算
+x_t = sol.y
+x_norms = np.linalg.norm(x_t, axis=0)
+
+# 6. グラフ描画
+plt.rcParams['font.family'] = 'Meiryo'
+plt.figure(figsize=(8, 4))
+plt.plot(sol.t, x_norms)
+plt.xlabel('Time [s]')
+plt.ylabel('||x(t)||')
+plt.title('状態ベクトル x(t) のノルムの時間変化')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
