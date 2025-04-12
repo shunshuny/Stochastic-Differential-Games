@@ -40,9 +40,9 @@ def solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100):
     return X
 
 # システム行列の例
-A = np.array([[0., 1.], [-1., -2.]])
-B = np.array([[0.], [1.]])
-Q = np.array([[10., 0.], [0., 1.]])
+A = np.array([[-1., 1.], [0., -2.]])
+B = np.array([[1.], [1.]])
+Q = np.array([[1., 0.2], [0.2, 1.0]])
 R = np.array([[1.]])
 
 P = solve_riccati_newton(A, B, Q, R)
@@ -52,6 +52,8 @@ print(P)
 # 3. フィードバックゲイン計算
 K = inv(R) @ B.T @ P
 A_cl = A - B @ K  # 閉ループ系
+eigvals = np.linalg.eigvals(A_cl)
+print("A_cl の固有値:", eigvals)
 
 # 4. シミュレーション
 def dynamics(t, x):

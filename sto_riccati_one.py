@@ -17,7 +17,7 @@ def simulate_sde(A_cl, Sigma, x0, T, dt):
     for i in range(num_steps):
         t = i * dt
         x = xs[i]
-        dW = np.random.randn(n) * np.sqrt(dt)  # Brownian increment
+        dW = np.random.randn(n) * np.sqrt(dt)  # Brownian increment N(0,1) に従う実数をn個生成
         dx_det = A_cl @ x * dt
         dx_sto = Sigma @ x * dW
         xs[i + 1] = x + dx_det + dx_sto
@@ -26,7 +26,7 @@ def simulate_sde(A_cl, Sigma, x0, T, dt):
 
 def solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100):
     """
-    ニュートン法で連続時間型リカッチ方程式を解く
+    ニュートン法で連続時間型リカッチ方程式を解く（確定版）
     A, B, Q, R: numpy配列
     tol: 収束許容誤差
     max_iter: 最大反復回数
@@ -61,13 +61,13 @@ def solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100):
 
 def solve_riccati_newton_sto(A, Ap, B, Q, R, tol=1e-10, max_iter=100):
     """
-    ニュートン法で連続時間型確率リカッチ方程式を解く
+    ニュートン法で連続時間型確率リカッチ方程式を解く（確率版）
     A, B, Q, R: numpy配列
     tol: 収束許容誤差
     max_iter: 最大反復回数
     """
     n = A.shape[0]
-    X2 = solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100)  # 初期解　
+    X2 = solve_riccati_newton(A, B, Q, R, tol=1e-10, max_iter=100)  # 初期解を確定版AREの解でおく　
 
     R_inv = inv(R)
     S = B @ R_inv @ B.T
@@ -75,7 +75,7 @@ def solve_riccati_newton_sto(A, Ap, B, Q, R, tol=1e-10, max_iter=100):
     for i in range(max_iter):
         # 関数 F(X) の定義
         # F = X2 @ (A - S @ X1) + (A - S @ X1).T @ X2 @ + Ap.T @ X2 @ Ap + X1 @ S @ X1 + Q  # リカッチ代数方程式の残差
-        F = A.T @ X2 + X2 @ A + Ap.T @ X2 @ Ap - X2 @ B @ R_inv @ B.T @ X2 + Q
+        F = A.T @ X2 + X2 @ A + Ap.T @ X2 @ Ap - X2 @ B @ R_inv @ B.T @ X2 + Q # 確率リカッチ代数方程式の残差
 
         # 収束判定
         err = norm(F, ord='fro')  # フロベニウスノルムを計算
@@ -101,7 +101,7 @@ A = np.array([[-2., 1.], [0., -1.]])
 Ap = 0.5 * A
 B = np.array([[1.], [-5.]])
 Q = np.array([[1., 0.], [0., 2.]])
-R = np.array([[1.]])
+R = np.array([[10.]])
 
 P = solve_riccati_newton_sto(A, Ap, B, Q, R)
 print("解 P:")
@@ -117,9 +117,6 @@ dt = 0.01
 Sigma = Ap  # 拡散係数（ノイズ強度）
 
 t_vals, x_vals = simulate_sde(A_cl, Sigma, x0, T, dt)
-
-# ノルムの時間変化をプロット
-x_norms = np.linalg.norm(x_vals, axis=1)
 
 # 6. グラフ描画
 def plot_state_trajectories(t_vals, x_vals, plot_norm=True):
